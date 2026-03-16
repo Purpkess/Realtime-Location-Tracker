@@ -11,11 +11,16 @@ const io = socketIo(server, {
     }
 });
 
+// Rotas básicas de TESTE (mantém o teu mapa funcionando)
+app.get('/', (req, res) => {
+    res.json({ status: 'Server OK - Mapa funcionando' });
+});
+
 // In-memory storage
 const connectedDevices = new Map();
 const peers = new Map();
 
-// Setup imports
+// Setup imports (mantidos!)
 const setupMiddleware = require('./middleware/middleware');
 const setupRoutes = require('./routes/routes');
 const setupSockets = require('./sockets/sockets');
@@ -34,5 +39,6 @@ app.use((err, req, res, next) => {
 // Start server
 const PORT = process.env.PORT || 3007;
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`📱 Teste WebSocketKing: ws://localhost:${PORT}/socket.io/?EIO=4`);
 });
