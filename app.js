@@ -1,50 +1,29 @@
 const express = require('express');
-const http = require('http');
+const https = require('https'); // Mudança: https em vez de http
+const fs = require('fs');
 const socketIo = require('socket.io');
-const WebSocket = require('ws'); // Adicionado para cliente WebSocket
 
 const app = express();
-const server = http.createServer(app);
+
+// Carregar certificados SSL (obrigatório para porta 443)
+const privateKey = fs.readFileSync('/path/to/private-key.pem', 'utf8');
+const certificate = fs.readFileSync('/path/to/certificate.pem', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
+
+const server = https.createServer(credentials, app); // Mudança: https.createServer
 const io = socketIo(server, {
     cors: {
         origin: '*',
         methods: ['GET', 'POST']
-    }
+    },
+    // Configuração para HTTPS
+    secure: true,
+    transports: ['websocket'] // Força WebSocket (sem polling)
 });
 
-// Armazenamento em memória
+// In-memory storage
 const connectedDevices = new Map();
 const peers = new Map();
-
-// Cliente WebSocket para TouchDesigner
-const tdSocket = new WebSocket('ws://localhost:9980');
-
-tdSocket.on('open', () => {
-    console.log('Conectado ao TouchDesigner (porta 9980)');
-});
-
-tdSocket.on('message', (data) => {
-    console.log('Mensagem do TD:', data.toString());
-});
-
-tdSocket.on('error', (error) => {
-    console.error('Erro WebSocket TD:', error);
-});
-
-tdSocket.on('close', () => {
-    console.log('🔌 Desconectado do TouchDesigner');
-});
-
-// Função para enviar posição ao TouchDesigner
-function enviarPosicao(lat, lng) {
-    const msg = JSON.stringify({ lat, lng, type: 'position' });
-    if (tdSocket.readyState === WebSocket.OPEN) {
-        tdSocket.send(msg);
-        console.log('Posição enviada:', { lat, lng });
-    } else {
-        console.log('WebSocket TD não está conectado');
-    }
-}
 
 // Setup imports
 const setupMiddleware = require('./middleware/middleware');
@@ -54,7 +33,7 @@ const setupSockets = require('./sockets/sockets');
 // Apply setups
 setupMiddleware(app);
 setupRoutes(app);
-setupSockets(io, connectedDevices, peers, enviarPosicao); // Passa a função
+setupSockets(io, connectedDevices, peers);
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -62,8 +41,9 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something went wrong!');
 });
 
-// Start server
-const PORT = process.env.PORT || 3007;
-server.listen(PORT, () => {
-    console.log(`🚀 Server rodando na porta ${PORT}`);
+// Start server na porta 443
+const PORT = process.env.PORT || 443;
+server.listen(PORT, '0.0.0.0', () => { // '0.0.0.0' para acesso externo
+    console.log(`Server HTTPS + WebSocket rodando na porta ${PORT}`);
 });
+
