@@ -1,3 +1,7 @@
+app.get('/socket.io/', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -32,7 +36,7 @@ res.status(500).send('Something went wrong!');
 });
 
 // Start server
-const PORT = process.env.PORT || 443;
+const PORT = process.env.PORT || 3007;
 server.listen(PORT, () => {
 console.log(`Server is running on port ${PORT}`);
 });
