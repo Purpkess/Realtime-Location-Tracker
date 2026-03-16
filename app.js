@@ -32,6 +32,11 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
+const PORT = process.env.PORT || 3007;
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
 const socket = new WebSocket('ws://localhost:9980');
 
 socket.onopen = () => {
