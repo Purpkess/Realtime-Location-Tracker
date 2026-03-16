@@ -11,7 +11,7 @@ const io = socketIo(server, {
   }
 });
 
-// AGORA sim, a rota (DEPOIS do io ser criado)
+// Rotas básicas de teste
 app.get('/', (req, res) => {
   res.json({ status: 'Socket.IO server OK' });
 });
@@ -20,19 +20,20 @@ app.get('/socket.io/', (req, res) => {
   res.json({ status: 'Socket.IO endpoint OK' });
 });
 
-// In-memory storage
+// TEMPORARIAMENTE SEM OS TEUS IMPORTS (para isolar o erro)
 const connectedDevices = new Map();
 const peers = new Map();
 
-// Setup imports
-const setupMiddleware = require('./middleware/middleware');
-const setupRoutes = require('./routes/routes');
-const setupSockets = require('./sockets/sockets');
-
-// Apply setups
-setupMiddleware(app);
-setupRoutes(app);
-setupSockets(io, connectedDevices, peers);
+// Event listeners básicos
+io.on('connection', (socket) => {
+  console.log('Cliente conectado:', socket.id);
+  socket.emit('welcome', 'Servidor funcionando!');
+  
+  socket.on('message', (data) => {
+    console.log('Mensagem:', data);
+    socket.emit('response', `Recebido: ${data}`);
+  });
+});
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -40,17 +41,10 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something went wrong!');
 });
 
-// Start server
-const PORT = process.env.PORT || 3007;
+// Porta (APENAS AQUI!)
+const PORT = 3007;
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Teste em: http://localhost:${PORT}/`);
+  console.log(`🚀 Server rodando em http://localhost:${PORT}`);
 });
 
-
-// Start server
-const PORT = process.env.PORT || 3007;
-server.listen(PORT, () => {
-console.log(`Server is running on port ${PORT}`);
-});
 
